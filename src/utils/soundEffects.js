@@ -4,10 +4,30 @@
 class SoundManager {
   constructor() {
     this.audioContext = null;
-    this.enabled = true;
-    this.volume = 0.5;
+    this.enabled = this.loadPreference();
+    this.volume = 0.3; // 30% volume as requested
     this.sounds = {};
     this.initialized = false;
+    this.onSoundPlay = null; // Callback for visual notifications
+  }
+
+  // Load sound preference from localStorage
+  loadPreference() {
+    try {
+      const saved = localStorage.getItem('emergencyHub_soundEnabled');
+      return saved === null ? true : saved === 'true';
+    } catch {
+      return true;
+    }
+  }
+
+  // Save sound preference to localStorage
+  savePreference() {
+    try {
+      localStorage.setItem('emergencyHub_soundEnabled', String(this.enabled));
+    } catch {
+      // localStorage not available
+    }
   }
 
   // Initialize audio context (must be called after user interaction)
@@ -42,15 +62,20 @@ class SoundManager {
     oscillator.stop(this.audioContext.currentTime + duration);
   }
 
-  // Critical alert sound - urgent beeping
+  // Critical alert sound - urgent beeping (440Hz as requested)
   playCriticalAlert() {
     if (!this.enabled) return;
     this.init();
 
-    // Play 3 rapid high-pitched beeps
-    this.playBeep(1000, 0.1);
-    setTimeout(() => this.playBeep(1000, 0.1), 150);
-    setTimeout(() => this.playBeep(1200, 0.15), 300);
+    // Play 3 rapid beeps at 440Hz (0.2s total as requested)
+    this.playBeep(440, 0.07);
+    setTimeout(() => this.playBeep(440, 0.07), 80);
+    setTimeout(() => this.playBeep(520, 0.1), 160);
+    
+    // Trigger visual notification
+    if (this.onSoundPlay) {
+      this.onSoundPlay('critical', '🚨 New Critical Incident');
+    }
   }
 
   // New incident sound
@@ -63,7 +88,24 @@ class SoundManager {
     setTimeout(() => this.playBeep(800, 0.15), 120);
   }
 
-  // Success chime
+  // Dispatched sound - Success chime (ascending tones)
+  playDispatched() {
+    if (!this.enabled) return;
+    this.init();
+
+    // Ascending tones for dispatch
+    this.playBeep(400, 0.08);
+    setTimeout(() => this.playBeep(500, 0.08), 100);
+    setTimeout(() => this.playBeep(600, 0.08), 200);
+    setTimeout(() => this.playBeep(800, 0.15), 300);
+    
+    // Trigger visual notification
+    if (this.onSoundPlay) {
+      this.onSoundPlay('dispatched', '🚀 Responders Dispatched');
+    }
+  }
+
+  // Success chime (alias for dispatched)
   playSuccess() {
     if (!this.enabled) return;
     this.init();
@@ -74,14 +116,25 @@ class SoundManager {
     setTimeout(() => this.playBeep(800, 0.15), 200);
   }
 
-  // Completion tone
-  playComplete() {
+  // Resolved sound - Soft completion tone
+  playResolved() {
     if (!this.enabled) return;
     this.init();
 
-    // Soft completion sound
-    this.playBeep(500, 0.2, 'triangle');
-    setTimeout(() => this.playBeep(700, 0.3, 'triangle'), 150);
+    // Soft pleasant completion sound
+    this.playBeep(500, 0.15, 'triangle');
+    setTimeout(() => this.playBeep(650, 0.2, 'triangle'), 150);
+    setTimeout(() => this.playBeep(800, 0.25, 'triangle'), 300);
+    
+    // Trigger visual notification
+    if (this.onSoundPlay) {
+      this.onSoundPlay('resolved', '✅ Incident Resolved');
+    }
+  }
+
+  // Completion tone (alias)
+  playComplete() {
+    this.playResolved();
   }
 
   // Error sound
@@ -97,17 +150,24 @@ class SoundManager {
   // Toggle sound on/off
   toggle() {
     this.enabled = !this.enabled;
+    this.savePreference();
     return this.enabled;
   }
 
   // Set enabled state
   setEnabled(enabled) {
     this.enabled = enabled;
+    this.savePreference();
   }
 
   // Set volume (0-1)
   setVolume(vol) {
     this.volume = Math.max(0, Math.min(1, vol));
+  }
+
+  // Set callback for visual notifications
+  setOnSoundPlay(callback) {
+    this.onSoundPlay = callback;
   }
 }
 
@@ -118,6 +178,8 @@ const soundManager = new SoundManager();
 export const playSound = {
   criticalAlert: () => soundManager.playCriticalAlert(),
   newIncident: () => soundManager.playNewIncident(),
+  dispatched: () => soundManager.playDispatched(),
+  resolved: () => soundManager.playResolved(),
   success: () => soundManager.playSuccess(),
   complete: () => soundManager.playComplete(),
   error: () => soundManager.playError()
@@ -128,7 +190,8 @@ export const soundControls = {
   setEnabled: (enabled) => soundManager.setEnabled(enabled),
   setVolume: (vol) => soundManager.setVolume(vol),
   isEnabled: () => soundManager.enabled,
-  init: () => soundManager.init()
+  init: () => soundManager.init(),
+  setOnSoundPlay: (callback) => soundManager.setOnSoundPlay(callback)
 };
 
 export default soundManager;

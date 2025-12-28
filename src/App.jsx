@@ -1,12 +1,15 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Home, AlertCircle, Menu, X, Shield, Lock, Loader2, BarChart3 } from 'lucide-react';
+import { Home, AlertCircle, Menu, X, Shield, Lock, Loader2, BarChart3, Bell, BellOff } from 'lucide-react';
 import { ToastContainer } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import RoleSelector from './components/RoleSelector';
 import RoleBadge from './components/RoleBadge';
 import SOSButton from './components/SOSButton';
+import SoundNotification from './components/SoundNotification';
+import { soundControls, playSound } from './utils/soundEffects';
+import { subscribeToIncidents } from './services/socket';
 
 // Lazy load pages for code splitting
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -28,7 +31,15 @@ const PageLoader = () => (
 const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [soundEnabled, setSoundEnabled] = React.useState(soundControls.isEnabled());
   const { user, hasPermission } = useAuth();
+
+  // Toggle sound
+  const toggleSound = () => {
+    const newState = soundControls.toggle();
+    setSoundEnabled(newState);
+    soundControls.init(); // Initialize audio context on user interaction
+  };
 
   // Close menu on route change
   React.useEffect(() => {
@@ -96,8 +107,28 @@ const Navbar = () => {
                 );
               })}
               
-              {/* Role Badge */}
-              <div className="ml-2 pl-2 border-l border-gray-700">
+              {/* Sound Toggle & Role Badge */}
+              <div className="ml-2 pl-2 border-l border-gray-700 flex items-center gap-2">
+                {/* Sound Toggle - Only show for responder/admin */}
+                {hasPermission('responder') && (
+                  <button
+                    onClick={toggleSound}
+                    className={`relative p-2 rounded-lg transition-all group ${
+                      soundEnabled 
+                        ? 'text-green-400 hover:bg-green-500/10' 
+                        : 'text-gray-500 hover:bg-gray-800'
+                    }`}
+                    title={soundEnabled ? 'Sound notifications ON' : 'Sound notifications OFF'}
+                  >
+                    {soundEnabled ? <Bell size={20} /> : <BellOff size={20} />}
+                    {/* Tooltip */}
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 
+                                   bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 
+                                   group-hover:opacity-100 transition-opacity pointer-events-none">
+                      Sound notifications
+                    </span>
+                  </button>
+                )}
                 <RoleBadge />
               </div>
             </div>
@@ -217,6 +248,42 @@ const AuthWrapper = ({ children }) => {
   return children;
 };
 
+// Sound event listener component - only for responder/admin
+const SoundEventListener = () => {
+  const { hasPermission } = useAuth();
+
+  useEffect(() => {
+    // Only subscribe if user is responder or admin
+    if (!hasPermission('responder')) return;
+
+    // Initialize sound on component mount
+    soundControls.init();
+
+    const unsubscribe = subscribeToIncidents((event) => {
+      if (event.type === 'new_incident') {
+        const incident = event.data.incident;
+        // Play critical alert for critical/high severity
+        if (incident?.severity === 'Critical' || incident?.severity === 'High') {
+          playSound.criticalAlert();
+        } else {
+          playSound.newIncident();
+        }
+      } else if (event.type === 'incident_updated') {
+        const status = event.data.status || event.data.incident?.status;
+        if (status === 'Dispatched' || status === 'In Progress') {
+          playSound.dispatched();
+        } else if (status === 'Resolved' || status === 'Closed') {
+          playSound.resolved();
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [hasPermission]);
+
+  return null;
+};
+
 function AppContent() {
   return (
     <AuthWrapper>
@@ -235,6 +302,12 @@ function AppContent() {
           
           {/* Global SOS Button - Mobile only */}
           <SOSButton />
+          
+          {/* Sound Notifications - Visual toast for sounds */}
+          <SoundNotification />
+          
+          {/* Sound Event Listener - Triggers sounds on socket events */}
+          <SoundEventListener />
         </Suspense>
       </Router>
     </AuthWrapper>
