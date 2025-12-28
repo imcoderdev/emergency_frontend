@@ -111,8 +111,9 @@ const AIMetricsCard = ({ stats }) => (
 
 const ResponseTimeChart = ({ data }) => {
   const hours = ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM', '12AM'];
-  const values = data || [5, 8, 12, 15, 10, 7, 4];
-  const maxValue = Math.max(...values);
+  // Use provided data or generate realistic demo data
+  const values = data || [8, 15, 25, 32, 22, 14, 6];
+  const maxValue = Math.max(...values) || 1;
 
   return (
     <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl p-6 border border-gray-700/50">
@@ -120,16 +121,24 @@ const ResponseTimeChart = ({ data }) => {
         <Clock size={20} className="text-blue-400" />
         Peak Hours Activity
       </h3>
-      <div className="flex items-end justify-between h-40 gap-2">
-        {hours.map((hour, i) => (
-          <div key={hour} className="flex-1 flex flex-col items-center gap-2">
-            <div 
-              className="w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-t-lg transition-all duration-500 hover:from-blue-500 hover:to-purple-500"
-              style={{ height: `${(values[i] / maxValue) * 100}%` }}
-            />
-            <span className="text-gray-500 text-xs">{hour}</span>
-          </div>
-        ))}
+      <div className="flex items-end justify-between h-40 gap-2 px-2">
+        {hours.map((hour, i) => {
+          const heightPercent = Math.max((values[i] / maxValue) * 100, 5); // Min 5% height
+          return (
+            <div key={hour} className="flex-1 flex flex-col items-center gap-2 h-full">
+              <div className="flex-1 w-full flex items-end">
+                <div 
+                  className="w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-t-lg transition-all duration-500 hover:from-blue-500 hover:to-purple-500 min-h-[8px]"
+                  style={{ height: `${heightPercent}%` }}
+                />
+              </div>
+              <span className="text-gray-500 text-xs">{hour}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 text-center">
+        <span className="text-gray-500 text-xs">📈 Peak activity at 3PM with {values[3]} incidents</span>
       </div>
     </div>
   );
