@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Zap, ArrowRight, Activity, Brain, Clock, Shield, 
   TrendingUp, Radio, ChevronRight, AlertTriangle,
-  MapPin, Users, CheckCircle
+  MapPin, Users, CheckCircle, LogOut
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 // Animated counter hook
 const useCounter = (target, duration = 2000) => {
@@ -70,6 +71,7 @@ const FeatureCard = ({ icon: Icon, title, description, color }) => {
 
 const HeroLanding = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -147,12 +149,32 @@ const HeroLanding = () => {
             >
               Responders
             </button>
-            <button 
-              onClick={() => navigate('/login')}
-              className="px-4 py-2 sm:px-5 sm:py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-lg shadow-red-500/25 text-sm sm:text-base"
-            >
-              🔐 Login
-            </button>
+            
+            {/* Show different button based on auth state */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline text-sm text-gray-400">
+                  {user?.role === 'admin' ? '👑' : user?.role === 'responder' ? '🛡️' : '👤'} {user?.name}
+                </span>
+                <button 
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-all hover:scale-105 text-sm sm:text-base"
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 sm:px-5 sm:py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-lg shadow-red-500/25 text-sm sm:text-base"
+              >
+                🔐 Login
+              </button>
+            )}
           </div>
         </nav>
 

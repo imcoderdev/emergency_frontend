@@ -139,6 +139,26 @@ const Analytics = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('7d');
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+
+  // Export PDF using browser print
+  const handleExport = () => {
+    const originalTitle = document.title;
+    document.title = 'EmergencyHub_Analytics_Report';
+    window.print();
+    document.title = originalTitle;
+  };
+
+  // Handle date range change with loading effect
+  const handleDateChange = (newRange) => {
+    setIsFilterLoading(true);
+    setDateRange(newRange);
+    
+    // Simulate data refresh
+    setTimeout(() => {
+      setIsFilterLoading(false);
+    }, 800);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -152,7 +172,7 @@ const Analytics = () => {
       }
     };
     fetchData();
-  }, [dateRange]);
+  }, []);
 
   if (loading) {
     return (
@@ -177,17 +197,28 @@ const Analytics = () => {
             </div>
             <div className="flex items-center gap-3">
               {/* Date Range Filter */}
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:border-purple-500 outline-none"
+              <div className="relative">
+                <select
+                  value={dateRange}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  disabled={isFilterLoading}
+                  className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:border-purple-500 outline-none disabled:opacity-50"
+                >
+                  <option value="24h">Last 24 Hours</option>
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                </select>
+                {isFilterLoading && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <RefreshCw size={14} className="animate-spin text-purple-400" />
+                  </div>
+                )}
+              </div>
+              <button 
+                onClick={handleExport}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg transition-all"
               >
-                <option value="24h">Last 24 Hours</option>
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="90d">Last 90 Days</option>
-              </select>
-              <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg transition-all">
                 <Download size={18} />
                 <span className="hidden sm:inline">Export PDF</span>
               </button>
@@ -195,8 +226,18 @@ const Analytics = () => {
           </div>
         </div>
 
+        {/* Filter Loading Overlay */}
+        {isFilterLoading && (
+          <div className="max-w-7xl mx-auto mb-4">
+            <div className="bg-purple-500/20 border border-purple-500/30 rounded-lg p-3 flex items-center justify-center gap-3">
+              <RefreshCw size={18} className="animate-spin text-purple-400" />
+              <span className="text-purple-300 text-sm">Refreshing data for {dateRange === '24h' ? 'Last 24 Hours' : dateRange === '7d' ? 'Last 7 Days' : dateRange === '30d' ? 'Last 30 Days' : 'Last 90 Days'}...</span>
+            </div>
+          </div>
+        )}
+
         {/* Stats Grid */}
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className={`max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 transition-opacity duration-300 ${isFilterLoading ? 'opacity-50' : 'opacity-100'}`}>
           <StatCard
             title="Total Incidents"
             value={stats?.total || 156}
