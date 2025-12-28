@@ -1,7 +1,15 @@
 import { io } from 'socket.io-client';
 
+// Determine socket URL based on environment
+const getSocketURL = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000';
+  }
+  return 'https://emergency-backend-e33i.onrender.com';
+};
+
 // Initialize socket connection
-const socket = io('https://emergency-backend-e33i.onrender.com', {
+const socket = io(getSocketURL(), {
   transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionDelay: 1000,

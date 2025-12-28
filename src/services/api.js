@@ -1,11 +1,22 @@
 import axios from 'axios';
 
+// Determine base URL based on environment
+const getBaseURL = () => {
+  // Check if running locally
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  // Production URL
+  return 'https://emergency-backend-e33i.onrender.com/api';
+};
+
 // Initialize axios with base URL
 const api = axios.create({
-  baseURL: 'https://emergency-backend-e33i.onrender.com/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 15000 // 15 second timeout
 });
 
 /**
