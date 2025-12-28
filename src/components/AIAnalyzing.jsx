@@ -181,10 +181,10 @@ const AIAnalyzing = ({ onComplete, incidentType = 'Emergency', hasPhoto = false 
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-lg">
+      <div className="relative z-10 w-full max-w-lg mx-auto px-4 flex flex-col items-center">
         {/* Gemini AI Badge - PROMINENT */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 
+        <div className="flex items-center justify-center gap-3 mb-6 w-full">
+          <div className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 
                           rounded-full border border-white/20 backdrop-blur-sm">
             <GeminiLogo size={24} />
             <span className="text-white font-bold text-lg">Powered by Gemini AI</span>
@@ -193,10 +193,11 @@ const AIAnalyzing = ({ onComplete, incidentType = 'Emergency', hasPhoto = false 
         </div>
 
         {/* AI Brain Icon */}
-        <div className="relative mx-auto w-28 h-28 mb-6">
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 mb-6 mx-auto">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-full animate-pulse" />
           <div className="absolute inset-2 bg-slate-900 rounded-full flex items-center justify-center">
-            <GeminiLogo size={50} className="animate-pulse" />
+            <GeminiLogo size={40} className="animate-pulse sm:hidden" />
+            <GeminiLogo size={50} className="animate-pulse hidden sm:block" />
           </div>
           {/* Orbiting dots */}
           <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
@@ -211,17 +212,17 @@ const AIAnalyzing = ({ onComplete, incidentType = 'Emergency', hasPhoto = false 
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 text-center">
           🧠 Gemini AI Analyzing
         </h2>
-        <p className="text-gray-400 mb-4">
+        <p className="text-gray-400 mb-4 text-center text-sm sm:text-base">
           Processing your <span className="text-purple-400 font-semibold">{incidentType}</span> incident
           {hasPhoto && <span className="text-blue-400 font-semibold"> with photo</span>}
         </p>
 
         {/* Photo Analysis Indicator */}
         {hasPhoto && (
-          <div className="flex items-center justify-center gap-2 mb-6 p-3 bg-blue-500/20 rounded-xl border border-blue-500/30">
+          <div className="w-full flex items-center justify-center gap-2 mb-6 p-3 bg-blue-500/20 rounded-xl border border-blue-500/30">
             <Camera size={20} className="text-blue-400 animate-pulse" />
             <span className="text-blue-300 text-sm font-medium">Gemini Vision is analyzing your photo</span>
             <Image size={16} className="text-blue-400" />
@@ -229,12 +230,12 @@ const AIAnalyzing = ({ onComplete, incidentType = 'Emergency', hasPhoto = false 
         )}
 
         {/* AI Thinking - One Line Analysis */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-slate-800/80 to-purple-900/40 rounded-xl border border-purple-500/30">
+        <div className="w-full mb-6 p-4 bg-gradient-to-r from-slate-800/80 to-purple-900/40 rounded-xl border border-purple-500/30">
           <div className="flex items-center gap-2 mb-2">
             <Brain size={16} className="text-purple-400" />
             <span className="text-purple-400 text-xs font-semibold uppercase tracking-wider">AI Analysis</span>
           </div>
-          <div className="text-white font-mono text-sm min-h-[24px]">
+          <div className="text-white font-mono text-sm min-h-[24px] text-left">
             <span className="text-green-400">{'>'}</span>{' '}
             <span className="text-gray-300">{showTyping}</span>
             <span className="animate-pulse text-purple-400">|</span>
@@ -242,7 +243,7 @@ const AIAnalyzing = ({ onComplete, incidentType = 'Emergency', hasPhoto = false 
         </div>
 
         {/* Steps */}
-        <div className="space-y-3 text-left mb-6">
+        <div className="w-full space-y-3 mb-6">
           {ANALYSIS_STEPS.map((step, index) => {
             // Skip image step if no photo
             if (step.hasImage && !hasPhoto && index === 0) {
@@ -292,7 +293,7 @@ const AIAnalyzing = ({ onComplete, incidentType = 'Emergency', hasPhoto = false 
         </div>
 
         {/* Progress Bar */}
-        <div className="relative h-3 bg-gray-800 rounded-full overflow-hidden">
+        <div className="w-full relative h-3 bg-gray-800 rounded-full overflow-hidden">
           <div
             className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-500 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -302,7 +303,7 @@ const AIAnalyzing = ({ onComplete, incidentType = 'Emergency', hasPhoto = false 
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="flex items-center justify-between mt-2">
+        <div className="w-full flex items-center justify-between mt-2">
           <p className="text-gray-500 text-sm">{Math.round(progress)}% Complete</p>
           <div className="flex items-center gap-1 text-gray-500 text-xs">
             <GeminiLogo size={12} />
