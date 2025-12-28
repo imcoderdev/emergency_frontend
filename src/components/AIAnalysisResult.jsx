@@ -2,8 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircle, AlertCircle, Clock, TrendingUp, MapPin, 
-  Flame, Users, ArrowRight, Plus, Shield, Zap, Camera, Eye, AlertTriangle
+  Flame, Users, ArrowRight, Plus, Shield, Zap, Camera, Eye, AlertTriangle, Brain, Sparkles
 } from 'lucide-react';
+
+// Gemini AI Logo SVG Component
+const GeminiLogo = ({ size = 40, className = '' }) => (
+  <svg viewBox="0 0 28 28" width={size} height={size} className={className}>
+    <defs>
+      <linearGradient id="gemini-gradient-result" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#4285F4" />
+        <stop offset="25%" stopColor="#9B72CB" />
+        <stop offset="50%" stopColor="#D96570" />
+        <stop offset="75%" stopColor="#D96570" />
+        <stop offset="100%" stopColor="#9B72CB" />
+      </linearGradient>
+    </defs>
+    <path 
+      fill="url(#gemini-gradient-result)" 
+      d="M14 0C14 7.732 7.732 14 0 14c7.732 0 14 6.268 14 14 0-7.732 6.268-14 14-14-7.732 0-14-6.268-14-14Z"
+    />
+  </svg>
+);
 
 const SEVERITY_CONFIG = {
   critical: { 
@@ -114,17 +133,33 @@ const AIAnalysisResult = ({ incident, onReportAnother }) => {
           Incident Reported Successfully!
         </h1>
         <p className="text-gray-400 text-center mb-4 sm:mb-6 text-sm sm:text-base px-2">
-          {summary}
+          Your emergency has been analyzed by AI and dispatched to responders
         </p>
 
         {/* AI Analysis Card */}
         <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 shadow-2xl">
-          {/* AI Badge */}
-          <div className="flex items-center gap-2 mb-3 sm:mb-4">
-            <div className="px-2 sm:px-3 py-1 bg-purple-500/20 rounded-full flex items-center gap-1.5 sm:gap-2">
-              <Zap size={12} className="sm:hidden text-purple-400" />
-              <Zap size={14} className="hidden sm:block text-purple-400" />
-              <span className="text-purple-400 text-xs sm:text-sm font-medium">Gemini AI Analysis</span>
+          {/* AI Badge - Gemini Branding */}
+          <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 
+                            rounded-full border border-purple-500/30">
+              <GeminiLogo size={16} />
+              <span className="text-white text-xs sm:text-sm font-semibold">Gemini AI Analysis</span>
+              <Sparkles size={12} className="text-yellow-400" />
+            </div>
+            <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 rounded-full">
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-green-400 text-[10px] font-medium">Verified</span>
+            </div>
+          </div>
+
+          {/* One-Line AI Summary */}
+          <div className="mb-4 p-3 bg-gradient-to-r from-slate-800/80 to-purple-900/30 rounded-xl border border-purple-500/20">
+            <div className="flex items-start gap-2">
+              <Brain size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-purple-400 text-[10px] uppercase tracking-wider mb-1 font-semibold">AI Assessment</p>
+                <p className="text-white text-sm leading-relaxed">{summary}</p>
+              </div>
             </div>
           </div>
 

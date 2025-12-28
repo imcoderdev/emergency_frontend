@@ -6,12 +6,15 @@ import {
   Shield, AlertTriangle, CheckCircle, Clock, Flame, MapPin,
   Users, TrendingUp, Bell, Volume2, VolumeX, RefreshCw,
   ChevronRight, Eye, Trash2, CheckSquare, Siren, MessageSquare, Save,
-  ChevronUp, ChevronDown, X, List
+  ChevronUp, ChevronDown, X, List, Sparkles, ShieldCheck, Zap
 } from 'lucide-react';
 import { getIncidentStats, getPriorityQueue, getIncidents, updateIncidentStatus, verifyIncident, deleteIncident } from '../services/api';
 import { subscribeToIncidents } from '../services/socket';
 import PriorityQueue from '../components/PriorityQueue';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PermissionGuard from '../components/PermissionGuard';
+import LiveActivityFeed from '../components/LiveActivityFeed';
+import { playSound } from '../utils/soundEffects';
 
 // Fix leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -72,7 +75,7 @@ const MapController = ({ selectedIncident }) => {
   return null;
 };
 
-const ResponderDashboard = () => {
+const ResponderDashboardContent = () => {
   const [stats, setStats] = useState({
     total: 0, critical: 0, high: 0, inProgress: 0, resolved: 0, pending: 0, last24h: 0
   });
@@ -129,8 +132,7 @@ const ResponderDashboard = () => {
 
   // Play notification sound
   const playNotificationSound = () => {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleA8YTq3jw4F6Fjax1d99bQ==');
-    audio.play().catch(() => {});
+    playSound.criticalAlert();
   };
 
   // Handle status update
@@ -646,6 +648,9 @@ const ResponderDashboard = () => {
         </div>
       )}
 
+      {/* Live Activity Feed */}
+      <LiveActivityFeed />
+
       {/* Custom Styles */}
       <style jsx>{`
         @keyframes pulse {
@@ -654,6 +659,27 @@ const ResponderDashboard = () => {
         }
       `}</style>
     </div>
+  );
+};
+
+// Wrap with PermissionGuard - requires responder or admin role
+const ResponderDashboard = () => {
+  return (
+    <PermissionGuard 
+      requiredRole="responder" 
+      showMessage={true}
+      fallback={
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+          <div className="text-center p-8">
+            <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Responder Access Required</h2>
+            <p className="text-gray-400">You need responder or admin privileges to access this dashboard.</p>
+          </div>
+        </div>
+      }
+    >
+      <ResponderDashboardContent />
+    </PermissionGuard>
   );
 };
 

@@ -10,6 +10,7 @@ import {
 import { reportIncident, getIncidents, upvoteIncident } from '../services/api';
 import AIAnalysisResult from '../components/AIAnalysisResult';
 import DuplicateAlert from '../components/DuplicateAlert';
+import AIAnalyzing from '../components/AIAnalyzing';
 
 // Haversine formula to calculate distance between two points
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -179,6 +180,7 @@ const Report = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
+  const [showAIAnalyzing, setShowAIAnalyzing] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [duplicates, setDuplicates] = useState([]);
@@ -410,16 +412,35 @@ const Report = () => {
         return;
       }
 
-      // Submit report
-      const response = await reportIncident(incidentData);
-      setResponseData(response);
+      // Submit report with AI animation
+      setShowAIAnalyzing(true);
       setLoading(false);
-      setShowAnalysis(true);
+      
+      // Start API call in background while animation plays
+      const apiPromise = reportIncident(incidentData);
+      
+      // Store promise for later use when animation completes
+      setPendingIncident({ ...incidentData, apiPromise });
 
     } catch (err) {
       console.error('Error reporting incident:', err);
       setError(err.message || 'Failed to report incident');
       setLoading(false);
+    }
+  };
+
+  // Handle AI animation complete
+  const handleAIAnalysisComplete = async () => {
+    try {
+      // Get the response from the stored promise
+      const response = await pendingIncident.apiPromise;
+      setResponseData(response);
+      setShowAIAnalyzing(false);
+      setShowAnalysis(true);
+    } catch (err) {
+      console.error('Error completing report:', err);
+      setError(err.message || 'Failed to report incident');
+      setShowAIAnalyzing(false);
     }
   };
 
@@ -430,6 +451,7 @@ const Report = () => {
     setDescription('');
     setSeverity('high');
     removePhoto();
+    setShowAIAnalyzing(false);
     setShowAnalysis(false);
     setShowDuplicateAlert(false);
     setDuplicates([]);
@@ -456,19 +478,23 @@ const Report = () => {
   const handleReportAnyway = async () => {
     if (!pendingIncident) return;
     setShowDuplicateAlert(false);
-    setLoading(true);
-    setLoadingStep('ai');
+    setShowAIAnalyzing(true);
     
-    try {
-      const response = await reportIncident(pendingIncident);
-      setResponseData(response);
-      setLoading(false);
-      setShowAnalysis(true);
-    } catch (err) {
-      setError(err.message || 'Failed to report incident');
-      setLoading(false);
-    }
+    // Start API call in background while animation plays
+    const apiPromise = reportIncident(pendingIncident);
+    setPendingIncident({ ...pendingIncident, apiPromise });
   };
+
+  // Show AI Analyzing Animation
+  if (showAIAnalyzing) {
+    return (
+      <AIAnalyzing 
+        incidentType={selectedType}
+        hasPhoto={!!photo}
+        onComplete={handleAIAnalysisComplete}
+      />
+    );
+  }
 
   // Show AI Analysis Result
   if (showAnalysis && responseData) {

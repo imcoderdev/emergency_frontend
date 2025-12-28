@@ -1,14 +1,19 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Home, AlertCircle, Menu, X, Shield, Lock, Loader2 } from 'lucide-react';
+import { Home, AlertCircle, Menu, X, Shield, Lock, Loader2, BarChart3 } from 'lucide-react';
 import { ToastContainer } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import RoleSelector from './components/RoleSelector';
+import RoleBadge from './components/RoleBadge';
+import SOSButton from './components/SOSButton';
 
 // Lazy load pages for code splitting
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Report = lazy(() => import('./pages/Report'));
 const ResponderDashboard = lazy(() => import('./pages/ResponderDashboard'));
 const HeroLanding = lazy(() => import('./pages/HeroLanding'));
+const Analytics = lazy(() => import('./pages/Analytics'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -23,6 +28,7 @@ const PageLoader = () => (
 const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { user, hasPermission } = useAuth();
 
   // Close menu on route change
   React.useEffect(() => {
@@ -44,7 +50,8 @@ const Navbar = () => {
   const navLinks = [
     { path: '/dashboard', label: 'Live Dashboard', icon: Home },
     { path: '/report', label: 'Report Incident', icon: AlertCircle },
-    { path: '/responder', label: 'Responder Portal', icon: Shield, locked: true }
+    { path: '/responder', label: 'Responder Portal', icon: Shield, requiredRole: 'responder' },
+    { path: '/analytics', label: 'Analytics', icon: BarChart3, requiredRole: 'admin' }
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -68,22 +75,31 @@ const Navbar = () => {
             <div className="hidden md:flex items-center gap-2">
               {navLinks.map((link) => {
                 const Icon = link.icon;
+                const canAccess = !link.requiredRole || hasPermission(link.requiredRole);
                 return (
                   <Link
                     key={link.path}
-                    to={link.path}
+                    to={canAccess ? link.path : '#'}
+                    onClick={(e) => !canAccess && e.preventDefault()}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                      isActive(link.path)
-                        ? 'bg-red-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      !canAccess 
+                        ? 'text-gray-600 cursor-not-allowed'
+                        : isActive(link.path)
+                          ? 'bg-red-600 text-white'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                     }`}
                   >
                     <Icon size={18} />
                     <span className="font-medium">{link.label}</span>
-                    {link.locked && <Lock size={14} className="text-gray-500" />}
+                    {!canAccess && <Lock size={14} className="text-gray-600" />}
                   </Link>
                 );
               })}
+              
+              {/* Role Badge */}
+              <div className="ml-2 pl-2 border-l border-gray-700">
+                <RoleBadge />
+              </div>
             </div>
 
             {/* Mobile Menu Button - Enhanced touch target */}
@@ -124,28 +140,34 @@ const Navbar = () => {
             
             {navLinks.map((link) => {
               const Icon = link.icon;
+              const canAccess = !link.requiredRole || hasPermission(link.requiredRole);
               return (
                 <Link
                   key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
+                  to={canAccess ? link.path : '#'}
+                  onClick={(e) => {
+                    if (!canAccess) e.preventDefault();
+                    else setMobileMenuOpen(false);
+                  }}
                   className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all touch-manipulation active:scale-[0.98] ${
-                    isActive(link.path)
-                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-500/20'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700'
+                    !canAccess
+                      ? 'text-gray-600 cursor-not-allowed'
+                      : isActive(link.path)
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-500/20'
+                        : 'text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700'
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isActive(link.path) ? 'bg-white/20' : 'bg-gray-800'
+                    !canAccess ? 'bg-gray-800/50' : isActive(link.path) ? 'bg-white/20' : 'bg-gray-800'
                   }`}>
                     <Icon size={20} />
                   </div>
                   <div className="flex-1">
                     <span className="font-medium text-base">{link.label}</span>
-                    {link.locked && (
+                    {!canAccess && (
                       <div className="flex items-center gap-1 mt-0.5">
-                        <Lock size={10} className="text-gray-500" />
-                        <span className="text-xs text-gray-500">Auth Required</span>
+                        <Lock size={10} className="text-gray-600" />
+                        <span className="text-xs text-gray-600">{link.requiredRole}+ Only</span>
                       </div>
                     )}
                   </div>
@@ -180,23 +202,52 @@ const Layout = ({ children, showNavbar = true }) => (
   </div>
 );
 
+// Auth wrapper component
+const AuthWrapper = ({ children }) => {
+  const { isAuthenticated, isLoading, login } = useAuth();
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (!isAuthenticated) {
+    return <RoleSelector onLogin={login} />;
+  }
+
+  return children;
+};
+
+function AppContent() {
+  return (
+    <AuthWrapper>
+      <Router>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Hero Landing - No navbar */}
+            <Route path="/" element={<HeroLanding />} />
+            
+            {/* Pages with navbar */}
+            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/report" element={<Layout><Report /></Layout>} />
+            <Route path="/responder" element={<Layout><ResponderDashboard /></Layout>} />
+            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+          </Routes>
+          
+          {/* Global SOS Button - Mobile only */}
+          <SOSButton />
+        </Suspense>
+      </Router>
+    </AuthWrapper>
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <ToastContainer>
-        <Router>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Hero Landing - No navbar */}
-              <Route path="/" element={<HeroLanding />} />
-              
-              {/* Pages with navbar */}
-              <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-              <Route path="/report" element={<Layout><Report /></Layout>} />
-              <Route path="/responder" element={<Layout><ResponderDashboard /></Layout>} />
-            </Routes>
-          </Suspense>
-        </Router>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </ToastContainer>
     </ErrorBoundary>
   );

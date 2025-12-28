@@ -8,7 +8,9 @@ import LiveIndicator from '../components/LiveIndicator';
 import HeatmapLayer from '../components/HeatmapLayer';
 import EmptyState from '../components/EmptyState';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { Flame, Layers } from 'lucide-react';
+import StatsOverview from '../components/StatsOverview';
+import LiveActivityFeed from '../components/LiveActivityFeed';
+import { Flame, Layers, Sparkles, ShieldCheck, Zap, TrendingUp } from 'lucide-react';
 
 // Fix for default marker icons in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -57,6 +59,17 @@ const Dashboard = () => {
   const [newIncidentIds, setNewIncidentIds] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [showHeatmap, setShowHeatmap] = useState(true);
+  const [showStats, setShowStats] = useState(false);
+
+  // Calculate priority score for display
+  const getPriorityDisplay = (incident) => {
+    const score = incident.ai_analysis?.priority_score || 
+                  incident.priorityScore || 
+                  (incident.severity === 'Critical' ? 95 : 
+                   incident.severity === 'High' ? 75 : 
+                   incident.severity === 'Medium' ? 50 : 30);
+    return score;
+  };
 
   // Convert incidents to heatmap points
   const heatmapPoints = incidents.map(incident => {
@@ -133,6 +146,9 @@ const Dashboard = () => {
     <div className="flex flex-col lg:flex-row h-screen w-full overflow-hidden bg-gray-900">
       {/* Live Indicator - Fixed Top Right */}
       <LiveIndicator incidentCount={incidents.length} lastUpdate={lastUpdate} />
+      
+      {/* Live Activity Feed - Fixed Bottom Right */}
+      <LiveActivityFeed />
 
       {/* Map Section - Full width on mobile, 65% on desktop */}
       <div className="w-full lg:w-[65%] h-[50vh] lg:h-full relative order-1">
@@ -214,9 +230,52 @@ const Dashboard = () => {
       <div className="w-full lg:w-[35%] h-[50vh] lg:h-full bg-black/80 backdrop-blur-lg border-t lg:border-t-0 lg:border-l border-gray-700 overflow-hidden flex flex-col order-2">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-700">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Live Incidents</h2>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Live Incidents</h2>
+            <button 
+              onClick={() => setShowStats(!showStats)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+                showStats 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              <TrendingUp size={14} />
+              Stats
+            </button>
+          </div>
           <p className="text-gray-400 text-sm">{incidents.length} active reports</p>
         </div>
+
+        {/* Stats Overview - Collapsible */}
+        {showStats && (
+          <div className="p-3 border-b border-gray-700 bg-gray-900/50">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-800/80 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-white">{incidents.length}</div>
+                <div className="text-xs text-gray-400">Active</div>
+              </div>
+              <div className="bg-gray-800/80 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-red-400">
+                  {incidents.filter(i => i.severity === 'Critical' || i.severity === 'High').length}
+                </div>
+                <div className="text-xs text-gray-400">Critical/High</div>
+              </div>
+              <div className="bg-gray-800/80 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-purple-400">
+                  {incidents.filter(i => i.ai_analysis).length}
+                </div>
+                <div className="text-xs text-gray-400">AI Analyzed</div>
+              </div>
+              <div className="bg-gray-800/80 rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-green-400">
+                  {Math.round(incidents.reduce((sum, i) => sum + getPriorityDisplay(i), 0) / Math.max(incidents.length, 1))}
+                </div>
+                <div className="text-xs text-gray-400">Avg Priority</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Incident Feed */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
@@ -238,6 +297,21 @@ const Dashboard = () => {
                     : ''
                 }`}
               >
+                {/* AI Verified Badge */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 
+                                  rounded-full border border-purple-500/30">
+                    <Sparkles size={10} className="text-purple-400" />
+                    <span className="text-[10px] text-purple-300 font-medium">AI Analyzed</span>
+                  </div>
+                  {incident.ai_analysis?.verified !== false && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 rounded-full border border-green-500/30">
+                      <ShieldCheck size={10} className="text-green-400" />
+                      <span className="text-[10px] text-green-300 font-medium">Verified</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -249,9 +323,16 @@ const Dashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${getSeverityColor(incident.severity)}`}>
-                    {incident.severity}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getSeverityColor(incident.severity)}`}>
+                      {incident.severity}
+                    </span>
+                    {/* Priority Score */}
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-orange-500/20 rounded border border-orange-500/30">
+                      <Flame size={12} className="text-orange-400" />
+                      <span className="text-xs text-orange-300 font-bold">{getPriorityDisplay(incident)}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Description */}
