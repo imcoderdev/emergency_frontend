@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Shield, Crown, ArrowRight, Zap, AlertTriangle } from 'lucide-react';
+import { User, Shield, Crown, ArrowRight, Zap, AlertTriangle, Lock, Eye, EyeOff, X } from 'lucide-react';
 
 const ROLES = [
   {
@@ -42,6 +42,43 @@ const RoleSelector = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [redirectPath, setRedirectPath] = useState(null);
+  
+  // Admin login modal states
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [adminError, setAdminError] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const handleRoleSelect = (roleId) => {
+    if (roleId === 'admin') {
+      setShowAdminLogin(true);
+      setAdminError('');
+      setAdminUsername('');
+      setAdminPassword('');
+    } else {
+      setSelectedRole(roleId);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    setIsAuthenticating(true);
+    setAdminError('');
+    
+    // Simulate authentication delay for effect
+    setTimeout(() => {
+      if (adminUsername === 'Admin' && adminPassword === 'Admin@123') {
+        setSelectedRole('admin');
+        setShowAdminLogin(false);
+        setName('Administrator');
+        setIsAuthenticating(false);
+      } else {
+        setAdminError('Invalid credentials. Access denied.');
+        setIsAuthenticating(false);
+      }
+    }, 800);
+  };
 
   const handleContinue = () => {
     if (!selectedRole) return;
@@ -103,7 +140,7 @@ const RoleSelector = ({ onLogin }) => {
             return (
               <button
                 key={role.id}
-                onClick={() => setSelectedRole(role.id)}
+                onClick={() => handleRoleSelect(role.id)}
                 className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 text-left
                   ${isSelected 
                     ? `bg-gradient-to-br ${role.color} border-transparent shadow-2xl ${role.glowColor} scale-105` 
@@ -178,6 +215,104 @@ const RoleSelector = ({ onLogin }) => {
           🔒 This is a demo authentication for presentation purposes
         </p>
       </div>
+
+      {/* Admin Login Modal */}
+      {showAdminLogin && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-md mx-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-red-500/30 shadow-2xl shadow-red-500/20 p-8 animate-in fade-in zoom-in duration-300">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowAdminLogin(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-red-600 to-red-800 rounded-xl shadow-lg shadow-red-500/30">
+                <Lock size={32} className="text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Admin Authentication</h2>
+              <p className="text-gray-400 text-sm">Enter your credentials to access admin panel</p>
+            </div>
+
+            {/* Error Message */}
+            {adminError && (
+              <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm text-center animate-pulse">
+                ⚠️ {adminError}
+              </div>
+            )}
+
+            {/* Username Input */}
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Username</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  placeholder="Enter username..."
+                  className="w-full px-4 py-3 pl-12 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
+                  autoFocus
+                />
+                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div className="mb-6">
+              <label className="block text-sm text-gray-400 mb-2">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Enter password..."
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+                  className="w-full px-4 py-3 pl-12 pr-12 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
+                />
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Login Button */}
+            <button
+              onClick={handleAdminLogin}
+              disabled={isAuthenticating || !adminUsername || !adminPassword}
+              className={`w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300
+                ${isAuthenticating || !adminUsername || !adminPassword
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-lg shadow-red-500/30 hover:scale-[1.02]'
+                }`}
+            >
+              {isAuthenticating ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  <Crown size={20} />
+                  Access Admin Panel
+                </>
+              )}
+            </button>
+
+            {/* Hint */}
+            <p className="text-center text-gray-600 text-xs mt-4">
+              🔐 Authorized personnel only
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
