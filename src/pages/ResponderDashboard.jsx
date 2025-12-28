@@ -276,14 +276,14 @@ const ResponderDashboard = () => {
       </div>
 
       {/* Mobile Priority Queue Drawer */}
-      <div className={`lg:hidden fixed inset-0 z-50 transition-all duration-300 ${mobileDrawerOpen ? 'visible' : 'invisible'}`}>
+      <div className={`lg:hidden fixed inset-0 z-[60] transition-all duration-300 ${mobileDrawerOpen ? 'visible' : 'invisible'}`}>
         {/* Backdrop */}
         <div 
-          className={`absolute inset-0 bg-black/70 transition-opacity ${mobileDrawerOpen ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 bg-black/80 transition-opacity ${mobileDrawerOpen ? 'opacity-100' : 'opacity-0'}`}
           onClick={() => setMobileDrawerOpen(false)}
         />
         {/* Drawer */}
-        <div className={`absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 ${mobileDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 shadow-2xl ${mobileDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between p-4 border-b border-gray-800">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <AlertTriangle className="text-red-500" size={20} />
@@ -364,7 +364,7 @@ const ResponderDashboard = () => {
           {selectedIncident && (
             <button
               onClick={() => setMobileDetailsOpen(true)}
-              className="lg:hidden absolute bottom-4 right-4 z-[1000] flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl shadow-lg animate-bounce"
+              className="lg:hidden absolute bottom-4 right-4 z-[30] flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl shadow-lg animate-bounce"
             >
               <Eye size={18} />
               View Details
@@ -541,14 +541,14 @@ const ResponderDashboard = () => {
       </div>
 
       {/* Mobile Incident Details Modal */}
-      <div className={`lg:hidden fixed inset-0 z-50 transition-all duration-300 ${mobileDetailsOpen && selectedIncident ? 'visible' : 'invisible'}`}>
+      <div className={`lg:hidden fixed inset-0 z-[60] transition-all duration-300 ${mobileDetailsOpen && selectedIncident ? 'visible' : 'invisible'}`}>
         {/* Backdrop */}
         <div 
-          className={`absolute inset-0 bg-black/70 transition-opacity ${mobileDetailsOpen ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 bg-black/80 transition-opacity ${mobileDetailsOpen ? 'opacity-100' : 'opacity-0'}`}
           onClick={() => setMobileDetailsOpen(false)}
         />
         {/* Bottom Sheet */}
-        <div className={`absolute left-0 right-0 bottom-0 max-h-[85vh] bg-gray-900 rounded-t-3xl border-t border-gray-700 transform transition-transform duration-300 ${mobileDetailsOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div className={`absolute left-0 right-0 bottom-0 max-h-[85vh] bg-gray-900 rounded-t-3xl border-t border-gray-700 transform transition-transform duration-300 shadow-2xl ${mobileDetailsOpen ? 'translate-y-0' : 'translate-y-full'}`}>
           {/* Handle */}
           <div className="flex justify-center pt-3 pb-2">
             <div className="w-10 h-1 bg-gray-600 rounded-full" />

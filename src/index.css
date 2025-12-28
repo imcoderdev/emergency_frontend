@@ -20,3 +20,30 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Fix Leaflet z-index to not interfere with modals */
+.leaflet-pane,
+.leaflet-control {
+  z-index: 20 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 25 !important;
+}
+
+/* Custom scrollbar hide utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Extra small breakpoint for xs: prefix */
+@media (min-width: 375px) {
+  .xs\:flex {
+    display: flex;
+  }
+}

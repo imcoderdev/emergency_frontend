@@ -37,42 +37,42 @@ const LiveIndicator = ({ incidentCount, lastUpdate }) => {
 
   return (
     <>
-      {/* Main Live Indicator - Fixed Top Right */}
+      {/* Main Live Indicator - Fixed Top Right (below navbar on mobile) */}
       <div 
-        className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-2 
-          bg-black/80 backdrop-blur-md rounded-full border border-red-500/50 
+        className={`fixed top-[70px] sm:top-20 right-3 sm:right-4 z-40 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 
+          bg-black/90 backdrop-blur-md rounded-full border border-red-500/50 
           shadow-lg shadow-red-500/10 transition-all duration-300
           ${pulse ? 'scale-105 border-red-400' : 'scale-100'}
         `}
       >
         {/* LIVE Badge */}
-        <div className="flex items-center gap-2 pr-3 border-r border-gray-600">
+        <div className="flex items-center gap-1.5 sm:gap-2 pr-2 sm:pr-3 border-r border-gray-600">
           <div className="relative">
-            <div className="w-2.5 h-2.5 bg-red-500 rounded-full" />
-            <div className="absolute inset-0 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+            <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full" />
+            <div className="absolute inset-0 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full animate-ping" />
           </div>
-          <span className="text-red-500 font-bold text-sm tracking-wider">LIVE</span>
+          <span className="text-red-500 font-bold text-xs sm:text-sm tracking-wider">LIVE</span>
         </div>
 
         {/* Incident Counter */}
-        <div className="flex items-center gap-2 pr-3 border-r border-gray-600">
-          <Activity size={16} className="text-blue-400" />
+        <div className="flex items-center gap-1.5 sm:gap-2 pr-2 sm:pr-3 border-r border-gray-600">
+          <Activity size={14} className="text-blue-400 sm:w-4 sm:h-4" />
           <div className="flex flex-col items-center">
-            <span className={`text-xl font-bold text-white leading-none transition-all duration-300 ${pulse ? 'text-red-400 scale-110' : ''}`}>
+            <span className={`text-lg sm:text-xl font-bold text-white leading-none transition-all duration-300 ${pulse ? 'text-red-400 scale-110' : ''}`}>
               {incidentCount}
             </span>
-            <span className="text-[10px] text-gray-500 uppercase tracking-wider">Active</span>
+            <span className="text-[8px] sm:text-[10px] text-gray-500 uppercase tracking-wider">Active</span>
           </div>
         </div>
 
-        {/* Signal Strength Bars */}
-        <div className="flex items-center gap-1.5">
-          <Radio size={14} className="text-green-400" />
-          <div className="flex items-end gap-0.5 h-4">
-            <div className="w-1 h-1 bg-green-500 rounded-sm animate-pulse" style={{ animationDelay: '0ms' }} />
-            <div className="w-1 h-2 bg-green-500 rounded-sm animate-pulse" style={{ animationDelay: '100ms' }} />
-            <div className="w-1 h-3 bg-green-500 rounded-sm animate-pulse" style={{ animationDelay: '200ms' }} />
-            <div className="w-1 h-4 bg-green-400 rounded-sm animate-pulse" style={{ animationDelay: '300ms' }} />
+        {/* Signal Strength Bars - Hidden on very small screens */}
+        <div className="hidden xs:flex items-center gap-1">
+          <Radio size={12} className="text-green-400 sm:w-3.5 sm:h-3.5" />
+          <div className="flex items-end gap-0.5 h-3 sm:h-4">
+            <div className="w-0.5 sm:w-1 h-1 bg-green-500 rounded-sm animate-pulse" style={{ animationDelay: '0ms' }} />
+            <div className="w-0.5 sm:w-1 h-1.5 sm:h-2 bg-green-500 rounded-sm animate-pulse" style={{ animationDelay: '100ms' }} />
+            <div className="w-0.5 sm:w-1 h-2 sm:h-3 bg-green-500 rounded-sm animate-pulse" style={{ animationDelay: '200ms' }} />
+            <div className="w-0.5 sm:w-1 h-3 sm:h-4 bg-green-400 rounded-sm animate-pulse" style={{ animationDelay: '300ms' }} />
           </div>
         </div>
       </div>
@@ -80,9 +80,9 @@ const LiveIndicator = ({ incidentCount, lastUpdate }) => {
       {/* New Incident Toast */}
       {showToast && (
         <div 
-          className="fixed top-20 right-4 z-50 flex items-center gap-3 px-4 py-3 
+          className="fixed top-[120px] sm:top-32 right-3 sm:right-4 z-40 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 
             bg-gradient-to-r from-red-600 to-orange-600 rounded-lg shadow-xl 
-            animate-slide-in-right"
+            animate-slide-in-right max-w-[calc(100vw-24px)] sm:max-w-none"
         >
           <div className="p-2 bg-white/20 rounded-full">
             <AlertTriangle size={18} className="text-white" />
