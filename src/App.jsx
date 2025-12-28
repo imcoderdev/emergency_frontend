@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Home, AlertCircle, Menu, X, Shield, Lock, Loader2, BarChart3, Bell, BellOff } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { Home, AlertCircle, Menu, X, Shield, Lock, Loader2, BarChart3, Bell, BellOff, ShieldX } from 'lucide-react';
 import { ToastContainer } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -233,9 +233,23 @@ const Layout = ({ children, showNavbar = true }) => (
   </div>
 );
 
-// Auth wrapper component
+// Auth wrapper component with redirect support
 const AuthWrapper = ({ children }) => {
-  const { isAuthenticated, isLoading, login } = useAuth();
+  const { isAuthenticated, isLoading, login, user } = useAuth();
+  const [shouldRedirect, setShouldRedirect] = React.useState(false);
+  const [redirectPath, setRedirectPath] = React.useState('/dashboard');
+
+  // Handle post-login redirect
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      const storedRedirect = sessionStorage.getItem('authRedirect');
+      if (storedRedirect) {
+        setRedirectPath(storedRedirect);
+        setShouldRedirect(true);
+        sessionStorage.removeItem('authRedirect');
+      }
+    }
+  }, [isAuthenticated, user]);
 
   if (isLoading) {
     return <PageLoader />;
@@ -245,6 +259,56 @@ const AuthWrapper = ({ children }) => {
     return <RoleSelector onLogin={login} />;
   }
 
+  // Handle redirect after login
+  if (shouldRedirect) {
+    setShouldRedirect(false);
+    window.location.href = redirectPath;
+    return <PageLoader />;
+  }
+
+  return children;
+};
+
+// Protected Route Component - Blocks access based on role
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, isAuthenticated } = useAuth();
+  
+  // Not logged in - redirect to home
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  // Check if user's role is in allowed roles
+  if (!allowedRoles.includes(user.role)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900/20 to-gray-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="w-24 h-24 mx-auto mb-6 bg-red-600/20 rounded-full flex items-center justify-center">
+            <ShieldX size={48} className="text-red-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">🚫 Access Denied</h1>
+          <p className="text-gray-400 mb-6">
+            Authorized Personnel Only. Your role ({user.role}) does not have permission to access this page.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Link 
+              to="/dashboard" 
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-all"
+            >
+              Go to Dashboard
+            </Link>
+            <Link 
+              to="/" 
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-all"
+            >
+              Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return children;
 };
 
@@ -293,11 +357,29 @@ function AppContent() {
             {/* Hero Landing - No navbar */}
             <Route path="/" element={<HeroLanding />} />
             
-            {/* Pages with navbar */}
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            {/* PUBLIC ROUTES - Anyone logged in can access */}
             <Route path="/report" element={<Layout><Report /></Layout>} />
-            <Route path="/responder" element={<Layout><ResponderDashboard /></Layout>} />
-            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+            
+            {/* CITIZEN + EVERYONE - All roles can view dashboard */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute allowedRoles={['citizen', 'responder', 'admin']}>
+                <Layout><Dashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            
+            {/* RESPONDER PORTAL - Only responders and admins */}
+            <Route path="/responder" element={
+              <ProtectedRoute allowedRoles={['responder', 'admin']}>
+                <Layout><ResponderDashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            
+            {/* ADMIN ANALYTICS - Only admins */}
+            <Route path="/analytics" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Layout><Analytics /></Layout>
+              </ProtectedRoute>
+            } />
           </Routes>
           
           {/* Global SOS Button - Mobile only */}

@@ -6,8 +6,9 @@ import {
   Shield, AlertTriangle, CheckCircle, Clock, Flame, MapPin,
   Users, TrendingUp, Bell, Volume2, VolumeX, RefreshCw,
   ChevronRight, Eye, Trash2, CheckSquare, Siren, MessageSquare, Save,
-  ChevronUp, ChevronDown, X, List, Sparkles, ShieldCheck, Zap
+  ChevronUp, ChevronDown, X, List, Sparkles, ShieldCheck, Zap, BarChart3
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getIncidentStats, getPriorityQueue, getIncidents, updateIncidentStatus, verifyIncident, deleteIncident } from '../services/api';
 import { subscribeToIncidents } from '../services/socket';
 import PriorityQueue from '../components/PriorityQueue';
@@ -15,6 +16,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import PermissionGuard from '../components/PermissionGuard';
 import LiveActivityFeed from '../components/LiveActivityFeed';
 import { playSound } from '../utils/soundEffects';
+import { useAuth } from '../context/AuthContext';
 
 // Fix leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -76,6 +78,7 @@ const MapController = ({ selectedIncident }) => {
 };
 
 const ResponderDashboardContent = () => {
+  const { user, isAdmin } = useAuth();
   const [stats, setStats] = useState({
     total: 0, critical: 0, high: 0, inProgress: 0, resolved: 0, pending: 0, last24h: 0
   });
@@ -523,14 +526,27 @@ const ResponderDashboardContent = () => {
                   </div>
                 )}
 
-                {/* Delete Button - Bottom */}
-                <button
-                  onClick={() => handleDelete(selectedIncident._id)}
-                  className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-red-600/20 text-gray-400 hover:text-red-400 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:border-red-600/50 transition-all"
-                >
-                  <Trash2 size={16} />
-                  Delete Incident
-                </button>
+                {/* Analytics Button - ADMIN ONLY */}
+                {isAdmin && (
+                  <Link
+                    to="/analytics"
+                    className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-medium transition-all"
+                  >
+                    <BarChart3 size={18} />
+                    View Analytics 📊
+                  </Link>
+                )}
+
+                {/* Delete Button - ADMIN ONLY */}
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDelete(selectedIncident._id)}
+                    className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-red-600/20 text-gray-400 hover:text-red-400 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:border-red-600/50 transition-all"
+                  >
+                    <Trash2 size={16} />
+                    Delete Incident
+                  </button>
+                )}
               </div>
             </div>
           ) : (

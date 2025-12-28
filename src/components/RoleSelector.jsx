@@ -41,13 +41,25 @@ const RoleSelector = ({ onLogin }) => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [name, setName] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [redirectPath, setRedirectPath] = useState(null);
 
   const handleContinue = () => {
     if (!selectedRole) return;
     
     setIsAnimating(true);
+    
+    // Determine redirect path based on role
+    let path = '/dashboard';
+    if (selectedRole === 'admin') {
+      path = '/analytics';
+    } else if (selectedRole === 'responder') {
+      path = '/responder';
+    }
+    
     setTimeout(() => {
       onLogin(selectedRole, name);
+      // Store redirect path for after auth completes
+      sessionStorage.setItem('authRedirect', path);
     }, 500);
   };
 
