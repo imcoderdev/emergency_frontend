@@ -147,6 +147,12 @@ const HeroLanding = () => {
             >
               Responders
             </button>
+            <button 
+              onClick={() => navigate('/login')}
+              className="px-4 py-2 sm:px-5 sm:py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-lg shadow-red-500/25 text-sm sm:text-base"
+            >
+              🔐 Login
+            </button>
           </div>
         </nav>
 

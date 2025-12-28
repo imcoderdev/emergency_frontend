@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Home, AlertCircle, Menu, X, Shield, Lock, Loader2, BarChart3, Bell, BellOff, ShieldX } from 'lucide-react';
 import { ToastContainer } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -348,37 +348,69 @@ const SoundEventListener = () => {
   return null;
 };
 
+// Login page wrapper
+const LoginPage = () => {
+  const { isAuthenticated, login } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      const storedRedirect = sessionStorage.getItem('authRedirect');
+      if (storedRedirect) {
+        sessionStorage.removeItem('authRedirect');
+        navigate(storedRedirect, { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (isAuthenticated) {
+    return <PageLoader />;
+  }
+
+  return <RoleSelector onLogin={login} />;
+};
+
 function AppContent() {
   return (
-    <AuthWrapper>
       <Router>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Hero Landing - No navbar */}
+            {/* Hero Landing - PUBLIC, no auth needed */}
             <Route path="/" element={<HeroLanding />} />
             
-            {/* PUBLIC ROUTES - Anyone logged in can access */}
+            {/* Login Page - Shows role selector */}
+            <Route path="/login" element={<LoginPage />} />
+            
+            {/* PUBLIC ROUTES - Anyone can access (but need auth for actions) */}
             <Route path="/report" element={<Layout><Report /></Layout>} />
             
             {/* CITIZEN + EVERYONE - All roles can view dashboard */}
             <Route path="/dashboard" element={
-              <ProtectedRoute allowedRoles={['citizen', 'responder', 'admin']}>
-                <Layout><Dashboard /></Layout>
-              </ProtectedRoute>
+              <AuthWrapper>
+                <ProtectedRoute allowedRoles={['citizen', 'responder', 'admin']}>
+                  <Layout><Dashboard /></Layout>
+                </ProtectedRoute>
+              </AuthWrapper>
             } />
             
             {/* RESPONDER PORTAL - Only responders and admins */}
             <Route path="/responder" element={
-              <ProtectedRoute allowedRoles={['responder', 'admin']}>
-                <Layout><ResponderDashboard /></Layout>
-              </ProtectedRoute>
+              <AuthWrapper>
+                <ProtectedRoute allowedRoles={['responder', 'admin']}>
+                  <Layout><ResponderDashboard /></Layout>
+                </ProtectedRoute>
+              </AuthWrapper>
             } />
             
             {/* ADMIN ANALYTICS - Only admins */}
             <Route path="/analytics" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Layout><Analytics /></Layout>
-              </ProtectedRoute>
+              <AuthWrapper>
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Layout><Analytics /></Layout>
+                </ProtectedRoute>
+              </AuthWrapper>
             } />
           </Routes>
           
@@ -392,7 +424,6 @@ function AppContent() {
           <SoundEventListener />
         </Suspense>
       </Router>
-    </AuthWrapper>
   );
 }
 

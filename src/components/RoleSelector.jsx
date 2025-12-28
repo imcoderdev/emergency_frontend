@@ -246,13 +246,16 @@ const RoleSelector = ({ onLogin }) => {
 
             {/* Username Input */}
             <div className="mb-4">
-              <label className="block text-sm text-gray-400 mb-2">Username</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm text-gray-400">Username</label>
+                <span className="text-xs text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full">Admin</span>
+              </div>
               <div className="relative">
                 <input
                   type="text"
                   value={adminUsername}
                   onChange={(e) => setAdminUsername(e.target.value)}
-                  placeholder="Enter username..."
+                  placeholder="Admin"
                   className="w-full px-4 py-3 pl-12 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
                   autoFocus
                 />
@@ -262,13 +265,16 @@ const RoleSelector = ({ onLogin }) => {
 
             {/* Password Input */}
             <div className="mb-6">
-              <label className="block text-sm text-gray-400 mb-2">Password</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm text-gray-400">Password</label>
+                <span className="text-xs text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full">Admin@123</span>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="Enter password..."
+                  placeholder="Admin@123"
                   onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
                   className="w-full px-4 py-3 pl-12 pr-12 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all"
                 />
